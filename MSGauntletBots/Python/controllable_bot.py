@@ -13,22 +13,6 @@ serverAddressPort   = ("127.0.0.1", 11000)
 
 bufferSize          = 1024
 
-#bunch of timers and intervals for executing some sample commands
-moveInterval = 10
-timeSinceMove = time.time()
-
-fireInterval = 5
-timeSinceFire = time.time()
-
-stopInterval = 30
-timeSinceStop = time.time()
-
-directionMoveInterval = 15
-timeSinceDirectionMove = time.time()
-
-directionFaceInterval = 9
-timeSinceDirectionFace = time.time()
-
 directions = ["n","s","e","w","nw","sw","ne","se"]
 
 
@@ -48,8 +32,8 @@ def main():
 
         msgFromServer = UDPClientSocket.recvfrom(bufferSize)[0].decode('ascii')
         
-        ##uncomment to see message format from server
         print(msgFromServer)
+        print(type(msgFromServer))
 
         if "playerupdate" in msgFromServer:
             pos = msgFromServer.split(":")[1]
