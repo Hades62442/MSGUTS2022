@@ -4,8 +4,8 @@ import random
 
 import keyboard  # using module keyboard
 
-msgFromClient = "requestjoin:habakuk"
-name = "habakuk"
+msgFromClient = "requestjoin:mydisplayname"
+name = "mydisplayname"
 
 bytesToSend         = str.encode(msgFromClient)
 
@@ -66,7 +66,7 @@ def main():
             SendMessage(requestmovemessage)
             print(requestmovemessage)
 
-        if keyboard.is_pressed('x'): # bullet tornade (hopefully)
+        if keyboard.is_pressed('x'): # bullet tornade
             for i in range(500):
                 requestMessage = "facedirection:" + directions[i%8]
                 SendMessage(requestMessage)
