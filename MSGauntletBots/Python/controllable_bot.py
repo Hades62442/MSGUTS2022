@@ -66,7 +66,7 @@ def main():
             SendMessage(requestmovemessage)
             print(requestmovemessage)
 
-        if keyboard.is_pressed('x'): # bullet tornade
+        if keyboard.is_pressed('x'): # bullet tornado
             for i in range(500):
                 requestMessage = "facedirection:" + directions[i%8]
                 SendMessage(requestMessage)
