@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 import socket
 import random
+import time
 
-msgFromClient = "requestjoin:death"
-name = "death"
+msgFromClient = "requestjoin:bot"
+name = "bot"
 
 bytesToSend         = str.encode(msgFromClient)
 
@@ -78,93 +79,93 @@ def follow_path(coords, posx, posy):
             requestmovemessage = "moveto:" + str(coords[i][0]*8) + "," + str(coords[i][1]*8)
             SendMessage(requestmovemessage)
 
-def main():
+floorsx = []
+floorsy = []
+wallsx = []
+wallsy = []
+itemsx = []
+itemsy = []
 
-    floorsx = []
-    floorsy = []
-    wallsx = []
-    wallsy = []
-    itemsx = []
-    itemsy = []
+chosen_floor_indices = []
+chosen_item_indices = []
 
-    chosen_floor_indices = []
-    chosen_item_indices = []
+wallmap = np.zeros((100,100))
 
-    wallmap = np.zeros((100,100))
+grid = wallmap
 
-    grid = wallmap
+a = 0
+while True:
+    while(len(wallsx) == 0 or len(floorsx) == 0):
+        msgFromServer = UDPClientSocket.recvfrom(bufferSize)[0].decode('ascii')
+        if "nearbywalls" in msgFromServer:
+                walls = msgFromServer.split(":")[1]
+                walls = list(map(int, walls.split(',')[:-1]))
+                wallsx = np.array(walls[::2])//8
+                wallsy = np.array(walls[1::2])//8
+                for i in range(len(wallsx)):
+                    if wallmap[wallsx[i], wallsy[i]] < 1:
+                        wallmap[int(wallsx[i]), int(wallsy[i])] = 1
 
-    a = 0
-    while True:
-        while(len(wallsx) == 0 or len(floorsx) == 0):
-            msgFromServer = UDPClientSocket.recvfrom(bufferSize)[0].decode('ascii')
-            if "nearbywalls" in msgFromServer:
-                    walls = msgFromServer.split(":")[1]
-                    walls = list(map(int, walls.split(',')[:-1]))
-                    wallsx = np.array(walls[::2])//8
-                    wallsy = np.array(walls[1::2])//8
-                    for i in range(len(wallsx)):
-                        if wallmap[wallsx[i], wallsy[i]] < 1:
-                            wallmap[int(wallsx[i]), int(wallsy[i])] = 1
+        if "nearbyfloors" in msgFromServer:
+            floors = msgFromServer.split(":")[1]
+            floors = list(map(int, floors.split(',')[:-1]))
+            floorsx = np.array(floors[::2])//8
+            floorsy = np.array(floors[1::2])//8
+            for i in range(len(floorsx)):
+                if wallmap[floorsx[i], floorsy[i]] < 1:
+                    wallmap[int(floorsx[i]), int(floorsy[i])] = 2
 
-            if "nearbyfloors" in msgFromServer:
-                floors = msgFromServer.split(":")[1]
-                floors = list(map(int, floors.split(',')[:-1]))
-                floorsx = np.array(floors[::2])//8
-                floorsy = np.array(floors[1::2])//8
-                for i in range(len(floorsx)):
-                    if wallmap[floorsx[i], floorsy[i]] < 1:
-                        wallmap[int(floorsx[i]), int(floorsy[i])] = 2
+        if "nearbyitems" in msgFromServer:
+            items = msgFromServer.split(":")[1]
+            items = list(map(int, floors.split(',')[:-1]))
+            itemsx = np.array(items[::2])//8
+            itemsy = np.array(items[1::2])//8
+            for i in range(len(itemsx)):
+                if wallmap[itemsx[i], itemsy[i]] < 3:
+                    wallmap[int(itemsx[i]), int(itemsy[i])] = 3
 
-            if "nearbyitems" in msgFromServer:
-                items = msgFromServer.split(":")[1]
-                items = list(map(int, floors.split(',')[:-1]))
-                itemsx = np.array(items[::2])//8
-                itemsy = np.array(items[1::2])//8
-                for i in range(len(itemsx)):
-                    if wallmap[itemsx[i], itemsy[i]] < 3:
-                        wallmap[int(itemsx[i]), int(itemsy[i])] = 3
+    start = (0,0)
+    while start == (0,0):
+        msgFromServer = UDPClientSocket.recvfrom(bufferSize)[0].decode('ascii')
+        if "playerupdate" in msgFromServer:
+            pos = msgFromServer.split(":")[1]
+            print("position:", pos)
+            posSplit = pos.split(",")
+            posx = float(posSplit[0])
+            posy = float(posSplit[1])
+            posx = round(posx/8)
+            posy = round(posy/8)
+            start = (int(posx), int(posy))
 
-        start = (0,0)
-        while start == (0,0):
-            msgFromServer = UDPClientSocket.recvfrom(bufferSize)[0].decode('ascii')
-            if "playerupdate" in msgFromServer:
-                pos = msgFromServer.split(":")[1]
-                print("position:", pos)
-                posSplit = pos.split(",")
-                posx = float(posSplit[0])
-                posy = float(posSplit[1])
-                posx = round(posx/8)
-                posy = round(posy/8)
-                start = (int(posx), int(posy))
-
-        if len(itemsx) > 0:
+    if len(itemsx) > 0:
+        index = random.randint(0, len(items)-1)
+        while index in chosen_item_indices:
             index = random.randint(0, len(items)-1)
-            while index in chosen_item_indices:
-                index = random.randint(0, len(items)-1)
-            
-            chosen_item_indices.append(index)
-            goal = (itemsx[index],itemsy[index])
+        
+        chosen_item_indices.append(index)
+        goal = (itemsx[index],itemsy[index])
 
-        else:
+    else:
+        index = random.randint(0, len(floorsx)-1)
+        while index in chosen_floor_indices:
             index = random.randint(0, len(floorsx)-1)
-            while index in chosen_floor_indices:
-                index = random.randint(0, len(floorsx)-1)
 
-            chosen_floor_indices.append(index)
-            goal = (floorsx[index],floorsy[index])
+        chosen_floor_indices.append(index)
+        goal = (floorsx[index],floorsy[index])
 
-        route = astar(grid, start, goal)
+    route = astar(grid, start, goal)
 
-        route = route + [start]
+    route = route + [start]
 
-        route = route[::-1]
+    route = route[::-1]
 
-        follow_path(route, posx, posy)
+    follow_path(route, posx, posy)
 
-        print(route)
+    print(route)
 
-        a += 1
-        print(a)
+    a += 1
+    print(a)
 
-main()
+    if a > 50:
+        time.sleep(1)
+        a = 0
