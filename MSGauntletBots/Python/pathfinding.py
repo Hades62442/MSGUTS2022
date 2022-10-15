@@ -1,9 +1,8 @@
 # boilerplate
-
-# boilerplate
 import socket
 import time
 import numpy as np
+import random
 
 msgFromClient = "requestjoin:dijkstra"
 name = "dijkstra"
@@ -25,6 +24,7 @@ UDPClientSocket.sendto(bytesToSend, serverAddressPort)
 def SendMessage(requestmovemessage):
     bytesToSend = str.encode(requestmovemessage)
     UDPClientSocket.sendto(bytesToSend, serverAddressPort)
+    print("Sent message")
 
 def update_map(map,playerPosX,playerPosY,msgFromServer):
 
@@ -53,25 +53,26 @@ def update_map(map,playerPosX,playerPosY,msgFromServer):
             #itemsNearby[x[3*i]] = [int(x[3*i + 1]), int(x[3*i + 2])]
 
     # plot locations of floors (ie navigable space) on map 
-    for x in floorX:
-        for y in floorY:
-            map[x][y] = 500
+    for i in range(len(floorX)):
+            map[floorX[i]][floorY[i]] = 500
 
     for item in itemsNearby:
         # item: food V ammo V key V treasure
         map[item[1]][item[2]] = rewards[item[0]]
 
+    print("Updated map")
     return map
 
 def get_target(map,playerPosX,playerPosY):
-    min_val = 1001
+    min_val = 1000
     target_node = [playerPosX,playerPosY]
     for i in range(len(map)):
         for j in range(len(map[i])):
-            if map[i][j] != 1000 and map[i][j] < min_val:
+            if map[i][j] != 1000 and map[i][j] < min_val and i != 0:
                 min_val = map[i][j]
                 target_node = [i,j]
 
+    print("Got target node")
     return target_node
 
 def get_path(map, target_node):
@@ -79,7 +80,14 @@ def get_path(map, target_node):
 
 actions = {0:"stop:", 1:"fire:", 2:"facedirection:n",3:"facedirection:nw",4:"facedirection:w",5:"facedirection:sw",6:"facedirection:s", 7:"facedirection:se",8:"facedirection:e",9:"facedirection:ne", 10:"movedirection:n", 11:"movedirection:nw",12:"movedirection:w",13:"movedirection:sw",14:"movedirection:s",15:"movedirection:se",16:"movedirection:e", 17:"movedirection:ne"} 
 rewards = {"food":15, "ammo":10, "redkey":0, "yellowkey":1000, "bluekey":1000, "greenkey":1000, "treasure":5}        
-map = [[1000]*500]*500
+map = [[None]*500]*500
+
+for i in range(len(map)):
+    for j in range(len(map[i])):
+        map[i][j] = 1000
+
+counter = 0
+
 while True:
     msgFromServer = UDPClientSocket.recvfrom(bufferSize)[0].decode('ascii')
     print(msgFromServer)
@@ -100,8 +108,19 @@ while True:
     print(requestmovemessage)
     SendMessage(requestmovemessage)
 
+    previousPosX = playerPosX
+    previousPosY = playerPosX
     playerPosX = target_node[0]
     playerPosY = target_node[1]
+
+    if previousPosX == playerPosX and previousPosY == playerPosY:
+        counter += 1
+
+    if counter >= 100:
+        counter = 0
+        requestmovemessage = "movedirection:" + random.choice([["n","s","e","w","nw","sw","ne","se"]])
+
+    print(f"Counter: {counter}")
 
     #path = get_path(map, target_node)
     #move_along_path(path)
