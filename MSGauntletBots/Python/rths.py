@@ -1,11 +1,11 @@
+# boilerplate
 import socket
 import time
-import random
 
-import keyboard  # using module keyboard
+import keyboard
 
-msgFromClient = "requestjoin:mydisplayname"
-name = "mydisplayname"
+msgFromClient = "requestjoin:rths"
+name = "rths"
 
 bytesToSend         = str.encode(msgFromClient)
 
@@ -15,13 +15,11 @@ bufferSize          = 1024
 
 directions = ["n","s","e","w","nw","sw","ne","se"]
 
-
 # Create a UDP socket
 UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
  
 # Send to server using created UDP socket
 UDPClientSocket.sendto(bytesToSend, serverAddressPort)
-
 
 def SendMessage(requestmovemessage):
     bytesToSend = str.encode(requestmovemessage)
@@ -29,10 +27,8 @@ def SendMessage(requestmovemessage):
 
 def main():
     while True:
-
         msgFromServer = UDPClientSocket.recvfrom(bufferSize)[0].decode('ascii')
-        
-        print(msgFromServer)
+        update_map(map, msgFromServer)
 
         if "playerupdate" in msgFromServer:
             pos = msgFromServer.split(":")[1]
@@ -65,14 +61,54 @@ def main():
             SendMessage(requestmovemessage)
             print(requestmovemessage)
 
-        if keyboard.is_pressed('x'): # bullet tornado
-            for i in range(500):
-                requestMessage = "facedirection:" + directions[i%8]
-                SendMessage(requestMessage)
-                print(requestmovemessage)
-                requestMessage = "fire:"
-                SendMessage(requestMessage)
-                print(requestmovemessage)
+# bmaa*
 
+# initialise values
+expansions = 8
+vision = 5
+moves = 8
+push = False
+flow = True
 
-main()    
+time = 0
+
+if "playerupdate" in msgFromServer:
+    pos = msgFromServer.split(":")[1]
+    posSplit = pos.split(",")
+    curr_node = [posSplit[0],posSplit[1]]
+
+def controller():
+    search_phase()
+    if next_node:
+        # move to next node
+        requestmovemessage = "moveto: " + next_node[0] + "," + next_node[1]
+    time += 1
+
+def search_phase():
+    if not next_node or time >= limit:
+        search()
+        if len(open_list) > 0:
+            n = open_list[0]
+            f = g + h
+            update_heuristic_values(closed, f)
+            limit = time + moves
+
+def update_heuristic_values(closed, f):
+    for n in closed:
+        h = f - g
+
+def search():
+    P = []
+    exp = 0
+    closed = []
+    open = [curr_node]
+    map[curr_node[0],curr_node[1]] = 0
+
+    while len(open_list) > 0:
+        if open_list[0] == goal_node and exp >= expansions:
+            #calculate P
+            break
+        n = open_list.pop(0)
+        closed_list.append(n)
+
+main()

@@ -4,8 +4,8 @@ import random
 
 import keyboard  # using module keyboard
 
-msgFromClient = "requestjoin:mydisplayname"
-name = "mydisplayname"
+msgFromClient = "requestjoin:mydisplayname2"
+name = "mydisplayname2"
 
 bytesToSend         = str.encode(msgFromClient)
 
