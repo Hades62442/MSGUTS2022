@@ -118,8 +118,9 @@ while True:
         if "nearbyitems" in msgFromServer:
             items = msgFromServer.split(":")[1]
             items = list(map(int, floors.split(',')[:-1]))
-            itemsx = np.array(items[::2])//8
-            itemsy = np.array(items[1::2])//8
+            itemtypes = np.array(items[::3])
+            itemsx = np.array(items[1::3])//8
+            itemsy = np.array(items[2::3])//8
             for i in range(len(itemsx)):
                 if wallmap[itemsx[i], itemsy[i]] < 3:
                     wallmap[int(itemsx[i]), int(itemsy[i])] = 3
@@ -166,6 +167,4 @@ while True:
     a += 1
     print(a)
 
-    if a > 50:
-        time.sleep(1)
-        a = 0
+    time.sleep(1)
